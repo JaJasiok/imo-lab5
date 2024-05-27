@@ -632,7 +632,7 @@ void steepestLocalSearch(vector<Graph> &cycles, const vector<vector<int>> &dista
     } while (true);
 }
 
-vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMatrix, bool ifLocalSearch, int populationSize = 20){
+vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMatrix, bool ifLocalSearch, int populationSize = 20, int timeLimit = 60){
     vector<vector<Graph>> population;
 
     for(int i = 0; i < populationSize; i++){
@@ -642,9 +642,13 @@ vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMat
         population.push_back(cycles);
     }
 
-    for(int i = 0; i < 10000; i++){
-        cout << i << endl;
+    int a = 0;
 
+    int elapsed;
+
+    chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+
+    do{
         vector<Graph> parent1 = population[rand() % populationSize];
         vector<Graph> parent2 = population[rand() % populationSize];
 
@@ -772,7 +776,14 @@ vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMat
             population.erase(population.begin() + worstSolutionId);
             population.push_back(offspring);
         }
+
+        a++;
+
+        chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
+        elapsed = chrono::duration_cast<chrono::seconds>(end - begin).count();
     }
+    while(elapsed < timeLimit);
 
     vector<Graph> bestSolution;
     int bestDistance = INT_MAX;
@@ -784,6 +795,8 @@ vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMat
             bestSolution = solution;
         }
     }
+
+    cout << a << endl;
     
     return bestSolution;
 }
@@ -791,15 +804,130 @@ vector<Graph> hybridEvolutionaryAlgorithm(const vector<vector<int>> &distanceMat
 
 int main()
 {
-    // srand(time(0));
-
-    vector<vector<int>> verticesCoords = readKroaFile("kroB200.tsp");
+    vector<vector<int>> verticesCoords = readKroaFile("kroA200.tsp");
 
     vector<vector<int>> distanceMatrix = createDistanceMatrix(verticesCoords);
 
-    vector<Graph> solution = hybridEvolutionaryAlgorithm(distanceMatrix, true, 20);
+    // vector<Graph> bestHybridSolution;
+    // int bestHybridDistance = INT_MAX;
+    // int worstHybridDistance = 0;
+    // int avgHybridDistance = 0;
 
-    cout << solution[0].distance + solution[1].distance << endl;
+    // int bestHybridTime = INT_MAX;
+    // int worstHybridTime = 0;
+    // int avgHybridTime = 0;
 
+    // for(int i = 0; i < 10; i++)
+    // {
+    //     chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+    //     vector<Graph> hybrid = hybridEvolutionaryAlgorithm(distanceMatrix, false, 20, 38);
+    //     chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
+    //     int elapsed = chrono::duration_cast<chrono::seconds>(end - begin).count();
+
+    //     if(hybrid[0].distance + hybrid[1].distance < bestHybridDistance)
+    //     {
+    //         bestHybridDistance = hybrid[0].distance + hybrid[1].distance;
+    //         bestHybridSolution.clear();
+    //         for(Graph g: hybrid)
+    //         {
+    //             Graph newGraph(g);
+    //             bestHybridSolution.push_back(Graph(g));
+    //         }
+    //     }
+    //     if (hybrid[0].distance + hybrid[1].distance > worstHybridDistance)
+    //     {
+    //         worstHybridDistance = hybrid[0].distance + hybrid[1].distance;
+    //     }
+    //     avgHybridDistance += hybrid[0].distance + hybrid[1].distance;
+
+    //     if(elapsed < bestHybridTime)
+    //     {
+    //         bestHybridTime = elapsed;
+    //     }
+    //     if(elapsed > worstHybridTime)
+    //     {
+    //         worstHybridTime = elapsed;
+    //     }
+    //     avgHybridTime += elapsed;
+    // }
+
+    // avgHybridTime /= 10;
+
+    // avgHybridDistance /= 10;
+
+    // cout << "Hybrid evolutionary algorithm:" << endl;
+    // cout << "Best distance: " << bestHybridDistance << endl;
+    // cout << "Worst distance: " << worstHybridDistance << endl;
+    // cout << "Average distance: " << avgHybridDistance << endl;
+
+    // cout << "Best time: " << bestHybridTime << endl;
+    // cout << "Worst time: " << worstHybridTime << endl;
+    // cout << "Average time: " << avgHybridTime << endl;
+
+    // saveGraphs(bestHybridSolution, "hybridA.txt");
+
+    
+    
+
+    vector<Graph> bestHybridLocalSearchSolution;
+    int bestHybridLocalSearchDistance = INT_MAX;
+    int worstHybridLocalSearchDistance = 0;
+    int avgHybridLocalSearchDistance = 0;
+
+    int bestHybridLocalSearchTime = INT_MAX;
+    int worstHybridLocalSearchTime = 0;
+    int avgHybridLocalSearchTime = 0;
+
+    for(int i = 0; i < 10; i++)
+    {
+        chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+        vector<Graph> hybrid = hybridEvolutionaryAlgorithm(distanceMatrix, true, 20, 38);
+        chrono::steady_clock::time_point end = chrono::steady_clock::now();
+
+        int elapsed = chrono::duration_cast<chrono::seconds>(end - begin).count();
+
+        if(hybrid[0].distance + hybrid[1].distance < bestHybridLocalSearchDistance)
+        {
+            bestHybridLocalSearchDistance = hybrid[0].distance + hybrid[1].distance;
+            bestHybridLocalSearchSolution.clear();
+            for(Graph g: hybrid)
+            {
+                Graph newGraph(g);
+                bestHybridLocalSearchSolution.push_back(Graph(g));
+            }
+        }
+        if (hybrid[0].distance + hybrid[1].distance > worstHybridLocalSearchDistance)
+        {
+            worstHybridLocalSearchDistance = hybrid[0].distance + hybrid[1].distance;
+        }
+        avgHybridLocalSearchDistance += hybrid[0].distance + hybrid[1].distance;
+
+        if(elapsed < bestHybridLocalSearchTime)
+        {
+            bestHybridLocalSearchTime = elapsed;
+        }
+        if(elapsed > worstHybridLocalSearchTime)
+        {
+            worstHybridLocalSearchTime = elapsed;
+        }
+        avgHybridLocalSearchTime += elapsed;
+    }
+
+    avgHybridLocalSearchTime /= 10;
+
+    avgHybridLocalSearchDistance /= 10;
+
+    cout << "Hybrid evolutionary algorithm with local search:" << endl;
+    cout << "Best distance: " << bestHybridLocalSearchDistance << endl;
+    cout << "Worst distance: " << worstHybridLocalSearchDistance << endl;
+    cout << "Average distance: " << avgHybridLocalSearchDistance << endl;
+
+    cout << "Best time: " << bestHybridLocalSearchTime << endl;
+    cout << "Worst time: " << worstHybridLocalSearchTime << endl;
+    cout << "Average time: " << avgHybridLocalSearchTime << endl;
+
+    saveGraphs(bestHybridLocalSearchSolution, "hybridLocalSearchA.txt");
+    
     return 0;
 }
